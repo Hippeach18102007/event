@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Merry Christmas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0; padding: 0; background: #000; height: 100vh; overflow: hidden;
+            font-family: 'Quicksand', sans-serif;
+        }
+        canvas { position: fixed; top: 0; left: 0; z-index: 1; }
+
+        .container {
+            position: relative; z-index: 10; text-align: center; color: white;
+            top: 50%; transform: translateY(-50%); padding: 20px;
+        }
+
+        .wish-card {
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px);
+            display: inline-block; padding: 40px; border-radius: 30px;
+            border: 2px solid #f1c40f; box-shadow: 0 0 30px #f1c40f;
+            max-width: 600px;
+        }
+
+        .sender-name {
+            font-family: 'Dancing Script', cursive; font-size: 35px; color: #f1c40f;
+            margin-bottom: 10px; display: block;
+        }
+
+        .user-name { color: #e74c3c; font-size: 45px; font-family: 'Dancing Script', cursive; }
+
+        .main-wish { font-size: 22px; line-height: 1.6; margin: 20px 0; color: #ecf0f1; }
+
+        /* Nến và cây thông trang trí */
+        .decor { font-size: 50px; margin-top: 20px; }
+
+        /* Santa bay */
+        .santa {
+            position: absolute; top: 15%; left: -200px; font-size: 40px;
+            animation: fly 15s linear infinite;
+        }
+        @keyframes fly {
+            from { left: -200px; } to { left: 100%; }
+        }
+    </style>
+</head>
+<body>
+<canvas id="snow"></canvas>
+<div class="santa">🎅🛷🦌🦌</div>
+
+<div class="container">
+    <div class="wish-card">
+        <span class="sender-name" th:text="${sender}">Đào Anh Đức aka Nopro Peach</span>
+        <div style="font-size: 24px;">Chúc bạn</div>
+        <div class="user-name" th:text="${userName}">Bạn</div>
+        <p class="main-wish" th:text="${userWish}">Lời chúc</p>
+        <div class="decor">🎄 🕯️ 🎁</div>
+        <div style="margin-top: 30px;">
+            <a href="/music" style="text-decoration: none; background: #f1c40f; color: #000; padding: 12px 25px; border-radius: 25px; font-weight: bold; font-family: 'Quicksand', sans-serif;">
+                🎧 Nghe nhạc Giáng sinh cùng Nopro Peach
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('snow');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    let flakes = [];
+    function createFlakes() {
+        for(let i = 0; i < 150; i++) {
+            flakes.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                r: Math.random() * 4 + 1,
+                d: Math.random() * 1
+            });
+        }
+    }
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        for(let f of flakes) {
+            ctx.moveTo(f.x, f.y);
+            ctx.arc(f.x, f.y, f.r, 0, Math.PI*2, true);
+        }
+        ctx.fill();
+        update();
+    }
+    function update() {
+        for(let f of flakes) {
+            f.y += Math.pow(f.d, 2) + 1;
+            if(f.y > canvas.height) { f.y = -10; f.x = Math.random() * canvas.width; }
+        }
+    }
+    createFlakes();
+    setInterval(draw, 30);
+</script>
+</body>
+</html>

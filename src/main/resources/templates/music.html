@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Christmas Music Lounge - Nopro Peach</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #c0392b; /* Đỏ Noel */
+            --secondary-color: #27ae60; /* Xanh lá thông */
+            --accent-color: #f1c40f; /* Vàng Gold */
+        }
+
+        body {
+            margin: 0; padding: 20px; font-family: 'Quicksand', sans-serif;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            /* Hình nền Noel ấm cúng */
+            background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.6)),
+            url('https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=2070&auto=format&fit=crop');
+            background-repeat: no-repeat; background-position: center; background-size: cover;
+            backdrop-filter: blur(5px); color: white; overflow-x: hidden;
+        }
+
+        /* Hiệu ứng tuyết rơi nhẹ nhàng */
+        #snow-canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1; }
+
+        .music-container {
+            background: rgba(15, 15, 15, 0.8); padding: 40px; border-radius: 20px;
+            box-shadow: 0 0 50px rgba(192, 57, 43, 0.4);
+            max-width: 700px; width: 95%; text-align: center;
+            border: 2px solid var(--primary-color);
+            position: relative; z-index: 2;
+        }
+
+        #player-wrapper {
+            width: 100%; aspect-ratio: 16 / 9; margin-bottom: 25px; border-radius: 15px;
+            overflow: hidden; border: 3px solid var(--accent-color);
+            box-shadow: 0 0 20px rgba(241, 196, 15, 0.3); background-color: #000;
+        }
+
+        #song-title {
+            font-family: 'Mountains of Christmas', cursive; font-size: 2.5em;
+            margin: 10px 0; color: var(--accent-color);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .controls { display: flex; justify-content: center; align-items: center; gap: 25px; margin: 30px 0; }
+
+        .control-btn {
+            background: rgba(255,255,255,0.1); border: 2px solid var(--accent-color);
+            color: var(--accent-color); width: 60px; height: 60px; border-radius: 50%;
+            font-size: 24px; cursor: pointer; transition: all 0.3s;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        .control-btn:hover:not(:disabled) {
+            background-color: var(--accent-color); color: black;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        #play-pause-btn {
+            width: 80px; height: 80px; font-size: 35px;
+            background-color: var(--primary-color); color: white; border: none;
+            box-shadow: 0 0 20px var(--primary-color);
+        }
+
+        .navigation-links {
+            display: flex; justify-content: center; gap: 12px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            padding-top: 30px; flex-wrap: wrap;
+        }
+
+        .nav-button {
+            background-color: var(--secondary-color); color: white;
+            border: none; padding: 10px 18px; font-size: 0.85em; font-weight: bold;
+            border-radius: 50px; cursor: pointer; text-decoration: none; transition: 0.3s;
+        }
+
+        .nav-button:hover { background-color: var(--primary-color); transform: translateY(-3px); }
+
+        /* Visualizer kiểu nến lung linh */
+        .bar { width: 8px; background: linear-gradient(to top, var(--accent-color), #fff); border-radius: 4px; animation: bounce 1s infinite alternate; }
+
+        @keyframes bounce { from { height: 10px; opacity: 0.5; } to { height: 60px; opacity: 1; } }
+
+        .sender-tag { font-family: 'Mountains of Christmas'; font-size: 1.2em; color: #fff; opacity: 0.8; margin-bottom: 5px;}
+    </style>
+</head>
+<body>
+
+<canvas id="snow-canvas"></canvas>
+
+<div class="music-container">
+    <div class="sender-tag">Đào Anh Đức aka Nopro Peach presents</div>
+    <div id="player-wrapper">
+        <div id="player"></div>
+    </div>
+
+    <div id="song-info">
+        <h2 id="song-title">Merry Christmas! 🎄</h2>
+    </div>
+
+    <div id="visualizer" style="display: flex; justify-content: center; align-items: flex-end; height: 70px; gap: 6px; margin-bottom: 20px;">
+        <div class="bar" style="animation-delay: 0.1s"></div>
+        <div class="bar" style="animation-delay: 0.3s"></div>
+        <div class="bar" style="animation-delay: 0.5s"></div>
+        <div class="bar" style="animation-delay: 0.2s"></div>
+        <div class="bar" style="animation-delay: 0.4s"></div>
+    </div>
+
+    <div class="controls">
+        <button id="prev-btn" class="control-btn" disabled>⏮</button>
+        <button id="play-pause-btn" class="control-btn" disabled>▶️</button>
+        <button id="next-btn" class="control-btn" disabled>⏭</button>
+    </div>
+
+    <div id="play-instruction" style="color: var(--accent-color); font-size: 0.9em; margin-top: -20px; margin-bottom: 20px; font-style: italic; opacity: 0.9;">
+        ✨ Vui lòng nhấn nút <span style="color: #fff; font-weight: bold;">▶️</span> 2 lần để bắt đầu nghe nhạc nhé! ✨
+    </div>
+
+    <div class="navigation-links">
+        <a th:href="@{/}" class="nav-button">🏠 Trang chủ</a>
+        <a th:href="@{/celebrate}" class="nav-button">🎁 Xem lời chúc</a>
+        <a th:href="@{/music}" class="nav-button">🎵 Đổi Playlist</a>
+    </div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+    // PLAYLIST NHẠC GIÁNG SINH MỚI
+    const playlist = [
+        { videoId: 'aAkMkVFwAoo', title: 'All I Want For Christmas Is You' },
+        { videoId: 'E8gmARGvPlI', title: 'Last Christmas - Wham!' }
+    ];
+
+    let player;
+    let currentTrack = 0;
+    const songTitleElement = document.getElementById('song-title');
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const prevBtn = document.getElementById('prev-btn');
+
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+            height: '100%', width: '100%',
+            playerVars: { 'autoplay': 0, 'controls': 0, 'modestbranding': 1, 'rel': 0 },
+            events: {
+                'onReady': (e) => {
+                    songTitleElement.textContent = "Sẵn sàng để " + (playlist.length) + " bài nhạc Noel vang lên!";
+                    [playPauseBtn, nextBtn, prevBtn].forEach(b => b.disabled = false);
+                },
+                'onStateChange': (e) => {
+                    if (e.data === YT.PlayerState.PLAYING) {
+                        playPauseBtn.textContent = '⏸';
+                        // Khi nhạc đang phát, ẩn dòng chú thích đi cho đẹp
+                        document.getElementById('play-instruction').style.display = 'none';
+                    } else {
+                        playPauseBtn.textContent = '▶️';
+                    }
+                    if (e.data === YT.PlayerState.ENDED) playNext();
+                }
+            }
+        });
+    }
+
+    playPauseBtn.addEventListener('click', () => {
+        if (player.getPlayerState() === YT.PlayerState.UNSTARTED || player.getPlayerState() === -1) {
+            loadAndPlaySong(0);
+        } else if (player.getPlayerState() === YT.PlayerState.PLAYING) {
+            player.pauseVideo();
+        } else {
+            player.playVideo();
+        }
+    });
+
+    function loadAndPlaySong(index) {
+        currentTrack = index;
+        player.loadVideoById(playlist[currentTrack].videoId);
+        songTitleElement.textContent = playlist[currentTrack].title;
+    }
+
+    function playNext() { currentTrack = (currentTrack + 1) % playlist.length; loadAndPlaySong(currentTrack); }
+    function playPrev() { currentTrack = (currentTrack - 1 + playlist.length) % playlist.length; loadAndPlaySong(currentTrack); }
+
+    nextBtn.addEventListener('click', playNext);
+    prevBtn.addEventListener('click', playPrev);
+
+    // HIỆU ỨNG TUYẾT RƠI
+    const canvas = document.getElementById('snow-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    let flakes = [];
+    function createFlakes() {
+        for(let i = 0; i < 150; i++) {
+            flakes.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 3 + 1, d: Math.random() * 1 });
+        }
+    }
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "white"; ctx.beginPath();
+        for(let f of flakes) { ctx.moveTo(f.x, f.y); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2, true); }
+        ctx.fill();
+        for(let f of flakes) {
+            f.y += f.d + 1;
+            if(f.y > canvas.height) { f.y = -10; f.x = Math.random() * canvas.width; }
+        }
+    }
+    createFlakes();
+    setInterval(draw, 30);
+</script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Christmas Invitation</title>
+  <style>
+    body {
+      margin: 0; height: 100vh; display: flex; justify-content: center; align-items: center;
+      background: #0a0a2a; font-family: 'Segoe UI', sans-serif; overflow: hidden;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.95); padding: 40px; border-radius: 20px;
+      text-align: center; box-shadow: 0 0 50px rgba(231, 76, 60, 0.5); border: 4px solid #c0392b;
+      width: 350px;
+    }
+    h1 { color: #c0392b; font-size: 24px; }
+    input[type="text"] {
+      padding: 12px; width: 80%; border: 2px solid #ddd; border-radius: 25px;
+      font-size: 16px; outline: none; margin-bottom: 20px; text-align: center;
+    }
+    .gender-select { margin-bottom: 20px; display: flex; justify-content: center; gap: 20px; }
+    .gender-option { cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: bold; color: #333; }
+    button {
+      padding: 15px 30px; border-radius: 30px; border: none;
+      background: #e74c3c; color: white; font-size: 16px; cursor: pointer;
+      transition: 0.3s; font-weight: bold; width: 100%;
+    }
+    button:hover { background: #c0392b; transform: scale(1.05); }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>🎁 Quà tặng từ <br> Nopro Peach</h1>
+  <form action="/celebrate" method="post">
+    <input type="text" name="name" placeholder="Nhập tên bạn..." required>
+
+    <div class="gender-select">
+      <label class="gender-option"><input type="radio" name="gender" value="male" checked> Nam 🤵</label>
+      <label class="gender-option"><input type="radio" name="gender" value="female"> Nữ 💃</label>
+    </div>
+
+    <button type="submit">Nhận lời chúc ngay ✨</button>
+  </form>
+</div>
+</body>
+</html>
