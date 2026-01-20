@@ -72,62 +72,101 @@
 </div>
 
 <script>
-    // Hiệu ứng cánh hoa mai vàng rơi (Canvas)
-    const canvas = document.getElementById('confetti');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    // Cấu hình tỉ lệ trúng thưởng
+    const prizeList = [
+        { value: "500.000đ", weight: 1 },  // 1%
+        { value: "200.000đ", weight: 4 },  // 4%
+        { value: "100.000đ", weight: 10 }, // 10%
+        { value: "50.000đ",  weight: 15 }, // 15%
+        { value: "30.000đ",  weight: 20 }, // 20%
+        { value: "20.000đ",  weight: 25 }, // 25%
+        { value: "10.000đ",  weight: 25 }  // 25%
+    ];
 
-    let particles = [];
-    const colors = ['#FCD34D', '#F59E0B', '#FDE68A', '#FFFBEB']; // Tông vàng Gold
+    const fortunes = [
+        "Tiền vào cửa trước, vàng vào cửa sau, hai cái gặp nhau chui vào két sắt.",
+        "Năm nay tình duyên phơi phới, cẩn thận kẻo người yêu cũ mời cưới.",
+        "Sự nghiệp thăng tiến vùn vụt như ngựa Bính Ngọ phi nước đại.",
+        "Ăn được ngủ được là tiên, năm nay chắc chắn có nhiều tiền tiêu.",
+        "Ra đường gặp quý nhân, về nhà gặp thần tài.",
+        "Số đỏ như son, làm gì cũng thắng, chơi gì cũng hay.",
+        "Cẩn thận cân nặng, năm nay lộc ăn hơi nhiều đấy!"
+    ];
 
-    function createParticles() {
-        for(let i = 0; i < 100; i++) {
-            particles.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                r: Math.random() * 5 + 2,
-                d: Math.random() * 2 + 1,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                tilt: Math.floor(Math.random() * 10) - 10
-            });
+    // Biến cờ để kiểm tra xem đã chơi chưa
+    let hasPlayed = false;
+
+    // Hàm chọn quà random
+    function getLuckyMoney() {
+        let totalWeight = 0;
+        prizeList.forEach(item => totalWeight += item.weight);
+        let randomNum = Math.random() * totalWeight;
+        let weightSum = 0;
+        for (let item of prizeList) {
+            weightSum += item.weight;
+            if (randomNum <= weightSum) return item.value;
         }
+        return "10.000đ";
     }
 
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for(let p of particles) {
-            ctx.beginPath();
-            ctx.lineWidth = p.r;
-            ctx.strokeStyle = p.color;
-            ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
-            ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
-            ctx.stroke();
-        }
-        update();
+    // Tạo lưới bao lì xì
+    const grid = document.getElementById('grid-lixi');
+    for (let i = 0; i < 8; i++) {
+        const div = document.createElement('div');
+        // Thêm id để dễ xử lý nếu cần, thêm style cursor
+        div.className = 'envelope bg-red-600 border-2 border-yellow-400 h-32 md:h-40 rounded-xl flex items-center justify-center shadow-lg relative overflow-hidden group select-none';
+
+        // Gắn sự kiện click
+        div.onclick = function() { openLixi(this) };
+
+        div.innerHTML = `
+                <div class="text-5xl md:text-6xl group-hover:scale-110 transition-transform">🧧</div>
+                <div class="absolute bottom-2 text-yellow-200 text-xs font-bold">Bốc Đi</div>
+            `;
+        grid.appendChild(div);
     }
 
-    function update() {
-        for(let p of particles) {
-            p.tilt += Math.random() * 0.5 - 0.25; // Hiệu ứng lắc lư
-            p.y += Math.pow(p.d, 1.5) + 1; // Rơi xuống
+    // Xử lý khi mở lì xì
+    function openLixi(element) {
+        // 1. Kiểm tra nếu đã mở rồi thì chặn luôn
+        if (hasPlayed) return;
 
-            // Reset khi chạm đáy
-            if(p.y > canvas.height) {
-                p.x = Math.random() * canvas.width;
-                p.y = -10;
-            }
-        }
+        // Đánh dấu là đã chơi
+        hasPlayed = true;
+
+        // 2. Vô hiệu hóa TOÀN BỘ lưới lì xì ngay lập tức
+        // Thêm class pointer-events-none và opacity để người dùng biết là không bấm được nữa
+        const allEnvelopes = document.querySelectorAll('.envelope');
+        allEnvelopes.forEach(env => {
+            env.classList.add('opacity-50', 'pointer-events-none'); // Làm mờ tất cả
+        });
+
+        // Riêng cái vừa bấm thì làm sáng lại (để biết mình chọn cái nào)
+        element.classList.remove('opacity-50');
+        element.classList.add('opened', 'ring-4', 'ring-yellow-300'); // Thêm viền sáng
+
+        // 3. Random kết quả
+        const money = getLuckyMoney();
+        const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+
+        // 4. Điền dữ liệu vào Modal
+        document.getElementById('money-display').innerText = money;
+        document.getElementById('que-text').innerText = fortune;
+
+        // 5. Điền vào input ẩn
+        document.getElementById('luckyMoneyInput').value = money;
+        document.getElementById('luckyNoteInput').value = fortune;
+
+        // 6. Hiện Modal sau 500ms (để người dùng kịp nhìn hiệu ứng click)
+        setTimeout(() => {
+            document.getElementById('result-modal').classList.remove('hidden');
+        }, 500);
     }
 
-    createParticles();
-    setInterval(draw, 20);
-
-    // Resize window handle
-    window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    });
+    function closeModal() {
+        // Chỉ đóng modal, nhưng biến hasPlayed vẫn là true nên không click lại được
+        document.getElementById('result-modal').classList.add('hidden');
+    }
 </script>
 
 </body>

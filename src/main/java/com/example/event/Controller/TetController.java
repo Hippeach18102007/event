@@ -53,6 +53,14 @@ public class TetController {
     public String gamePage() {
         return "game";
     }
+    private String escapeHtml(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
+    }
 
     @PostMapping("/submit-lixi")
     public String submitLixi(
@@ -61,6 +69,7 @@ public class TetController {
             @RequestParam String bankName,
             @RequestParam String socialLink,
             @RequestParam String luckyNote,
+            @RequestParam String luckyMoney, // <--- THÊM THAM SỐ NÀY
             Model model
     ) {
         try {
@@ -70,29 +79,35 @@ public class TetController {
                 return "game";
             }
 
-            String subject = "[LI XI TET 2026] Yeu cau tu: " + fullName;
+            // Tiêu đề email thêm số tiền luôn cho dễ nhìn
+            String subject = "[LI XI TET 2026] " + fullName + " - " + luckyMoney;
 
             String html = String.format("""
-                    <h2>Co nguoi doi li xi ne ban oi!</h2>
-                    <hr/>
-                    <p><b>Ten nguoi nhan:</b> %s</p>
-                    <p><b>Ngan hang:</b> %s</p>
-                    <p><b>So tai khoan:</b> %s</p>
-                    <p><b>Facebook/Insta:</b> %s</p>
-                    <hr/>
-                    <p><b>Que ho boc duoc:</b> %s</p>
-                    <p>Mau check xem co phai ban minh khong roi chuyen khoan nhe :D</p>
+                    <div style="font-family: Arial, sans-serif; padding: 20px; border: 2px solid #d4af37; border-radius: 10px;">
+                        <h2 style="color: #c90000;">🧧 Co nguoi doi li xi ne ban oi!</h2>
+                        <hr/>
+                        <p><b>Ten nguoi nhan:</b> %s</p>
+                        <p><b>Ngan hang:</b> %s</p>
+                        <p><b>So tai khoan:</b> <b style="font-size: 18px;">%s</b></p>
+                        <p><b>Facebook/Insta:</b> <a href="%s">Xem trang ca nhan</a></p>
+                        <hr/>
+                        <h3 style="color: #eab308;">💰 SO TIEN TRUNG: <span style="font-size: 24px; color: red;">%s</span></h3>
+                        <p><b>Loi chuc/Que boc duoc:</b> %s</p>
+                        <hr/>
+                        <p><i>Mau check xem co phai ban minh khong roi chuyen khoan nhe :D</i></p>
+                    </div>
                     """,
                     escapeHtml(fullName),
                     escapeHtml(bankName),
                     escapeHtml(bankNumber),
-                    escapeHtml(socialLink),
+                    escapeHtml(socialLink), // Link để trong thẻ a cho dễ click
+                    escapeHtml(luckyMoney), // <--- HIỂN THỊ SỐ TIỀN Ở ĐÂY
                     escapeHtml(luckyNote)
             );
 
             System.out.println("Dang gui mail cho: " + fullName);
 
-            // Gửi về chính bạn
+            // Gửi mail (bạn nhớ thay email nhận thành email của bạn)
             mailApiService.sendHtml("daod1068@gmail.com", subject, html);
 
             System.out.println("Gui thanh cong!");
@@ -107,14 +122,5 @@ public class TetController {
         }
 
         return "game";
-    }
-
-    private static String escapeHtml(String s) {
-        if (s == null) return "";
-        return s.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;")
-                .replace("'", "&#39;");
     }
 }
