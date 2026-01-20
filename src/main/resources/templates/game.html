@@ -10,11 +10,12 @@
         body { font-family: 'Comfortaa', cursive; }
         .hand-font { font-family: 'Dancing Script', cursive; }
         .envelope { transition: all 0.3s; cursor: pointer; }
+
         /* Chỉ hover khi chưa bị disabled */
         .envelope:not(.disabled):hover { transform: translateY(-10px) rotate(5deg); }
 
         .envelope.opened { opacity: 0; pointer-events: none; }
-        .envelope.disabled { opacity: 0.5; pointer-events: none; filter: grayscale(80%); }
+        .envelope.disabled { opacity: 0.5; pointer-events: none; filter: grayscale(100%); cursor: not-allowed; }
 
         /* Hiệu ứng toả sáng cho số tiền */
         .glow-text {
@@ -28,13 +29,18 @@
 
 <div class="relative z-10 max-w-4xl mx-auto text-center">
     <h1 class="hand-font text-5xl text-yellow-400 font-bold mb-2">Gieo Quẻ - Hái Lộc 2026</h1>
-    <p class="text-yellow-100 mb-8">Chọn một bao lì xì để thử vận may nào! (Chỉ được chọn 1 cái thôi nhé)</p>
+
+    <p id="status-text" class="text-yellow-100 mb-8">Chọn một bao lì xì để thử vận may nào! (Chỉ được chọn 1 cái thôi nhé)</p>
 
     <div th:if="${success == true}" class="mb-6 p-4 bg-green-600/80 rounded-xl border border-green-400 animate-bounce">
         ✅ Đã gửi yêu cầu nhận Lì Xì! Chờ ting ting nhé!
     </div>
     <div th:if="${success == false}" class="mb-6 p-4 bg-red-600/80 rounded-xl border border-red-400">
         ❌ Lỗi gửi mail rồi. Chụp màn hình gửi mess cho mình nha!
+    </div>
+
+    <div id="played-alert" class="hidden mb-6 p-4 bg-yellow-600/80 rounded-xl border border-yellow-400 font-bold text-lg">
+        🚫 Bạn đã bốc quẻ rồi! Đừng tham lam nha 😜
     </div>
 
     <div id="grid-lixi" class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
@@ -95,7 +101,8 @@
 </div>
 
 <script>
-    // 1. Cấu hình tỉ lệ trúng thưởng
+    // --- CẤU HÌNH ---
+    const STORAGE_KEY = 'lixi_status_2026'; // Key lưu trong trình duyệt
     const prizeList = [
         { value: "500.000đ", weight: 1 },  // 1%
         { value: "200.000đ", weight: 4 },  // 4%
@@ -116,81 +123,99 @@
         "Cẩn thận cân nặng, năm nay lộc ăn hơi nhiều đấy!"
     ];
 
-    // BIẾN QUAN TRỌNG: Kiểm tra xem đã chơi chưa
     let hasPlayed = false;
 
-    // Hàm chọn quà theo tỉ lệ
+    // --- KHỞI TẠO ---
+    // Ngay khi load trang, kiểm tra xem đã chơi chưa
+    window.onload = function() {
+        const history = localStorage.getItem(STORAGE_KEY);
+        if (history === 'played') {
+            hasPlayed = true;
+            disableAllGame("Bạn đã bốc quẻ rồi! Hãy chia sẻ cho bạn bè nhé.");
+            document.getElementById('played-alert').classList.remove('hidden');
+        } else {
+            renderGrid();
+        }
+    }
+
+    // --- LOGIC ---
+
     function getLuckyMoney() {
         let totalWeight = 0;
         prizeList.forEach(item => totalWeight += item.weight);
-
         let randomNum = Math.random() * totalWeight;
         let weightSum = 0;
-
         for (let item of prizeList) {
             weightSum += item.weight;
-            if (randomNum <= weightSum) {
-                return item.value;
-            }
+            if (randomNum <= weightSum) return item.value;
         }
         return "10.000đ";
     }
 
-    // Tạo lưới bao lì xì
-    const grid = document.getElementById('grid-lixi');
-    for (let i = 0; i < 8; i++) {
-        const div = document.createElement('div');
-        div.className = 'envelope bg-red-600 border-2 border-yellow-400 h-32 md:h-40 rounded-xl flex items-center justify-center shadow-lg relative overflow-hidden group select-none';
-
-        // Gắn sự kiện click
-        div.onclick = function() { openLixi(this) };
-
-        div.innerHTML = `
+    function renderGrid() {
+        const grid = document.getElementById('grid-lixi');
+        grid.innerHTML = ''; // Xóa cũ nếu có
+        for (let i = 0; i < 8; i++) {
+            const div = document.createElement('div');
+            div.className = 'envelope bg-red-600 border-2 border-yellow-400 h-32 md:h-40 rounded-xl flex items-center justify-center shadow-lg relative overflow-hidden group select-none';
+            div.onclick = function() { openLixi(this) };
+            div.innerHTML = `
                 <div class="text-5xl md:text-6xl group-hover:scale-110 transition-transform">🧧</div>
                 <div class="absolute bottom-2 text-yellow-200 text-xs font-bold">Bốc Đi</div>
             `;
-        grid.appendChild(div);
+            grid.appendChild(div);
+        }
     }
 
-    // Xử lý khi mở lì xì
     function openLixi(element) {
-        // 1. CHẶN LUÔN NẾU ĐÃ CHƠI
         if (hasPlayed) return;
 
-        // Đánh dấu đã chơi
+        // 1. Lưu ngay trạng thái vào LocalStorage
+        localStorage.setItem(STORAGE_KEY, 'played');
         hasPlayed = true;
 
-        // 2. KHÓA TẤT CẢ CÁC BAO LÌ XÌ KHÁC
+        // 2. Khóa tất cả
         const allEnvelopes = document.querySelectorAll('.envelope');
-        allEnvelopes.forEach(env => {
-            // Thêm class disabled (làm mờ, xám màu, không click được)
-            env.classList.add('disabled');
-        });
+        allEnvelopes.forEach(env => env.classList.add('disabled'));
 
-        // Riêng cái vừa bấm thì cho hiệu ứng mở (biến mất)
+        // 3. Mở cái hiện tại
         element.classList.remove('disabled');
         element.classList.add('opened');
 
-        // 3. Random kết quả
+        // 4. Random & Hiện kết quả
         const money = getLuckyMoney();
         const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
 
-        // 4. Điền dữ liệu vào Modal
         document.getElementById('money-display').innerText = money;
         document.getElementById('que-text').innerText = fortune;
-
-        // 5. Điền vào input ẩn để gửi về server
         document.getElementById('luckyMoneyInput').value = money;
         document.getElementById('luckyNoteInput').value = fortune;
 
-        // 6. Hiện Modal sau 300ms
         setTimeout(() => {
             document.getElementById('result-modal').classList.remove('hidden');
         }, 300);
     }
 
+    // Hàm khóa game khi load trang
+    function disableAllGame(msg) {
+        document.getElementById('status-text').innerText = msg;
+        const grid = document.getElementById('grid-lixi');
+        grid.innerHTML = ''; // Xóa lưới cũ đi
+
+        // Vẽ lại lưới ở trạng thái bị disable hết
+        for (let i = 0; i < 8; i++) {
+            const div = document.createElement('div');
+            // Thêm class 'disabled' ngay từ đầu
+            div.className = 'envelope disabled bg-red-600 border-2 border-yellow-400 h-32 md:h-40 rounded-xl flex items-center justify-center shadow-lg relative overflow-hidden select-none';
+            div.innerHTML = `
+                <div class="text-5xl md:text-6xl grayscale">🧧</div>
+                <div class="absolute bottom-2 text-gray-400 text-xs font-bold">Đã Bốc</div>
+            `;
+            grid.appendChild(div);
+        }
+    }
+
     function closeModal() {
-        // Chỉ đóng modal, người dùng vẫn không thể click lại vào bao lì xì
         document.getElementById('result-modal').classList.add('hidden');
     }
 </script>
