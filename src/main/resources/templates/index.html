@@ -2,45 +2,53 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title>Christmas Invitation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thiệp Chúc Tết 2026</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
   <style>
-    body {
-      margin: 0; height: 100vh; display: flex; justify-content: center; align-items: center;
-      background: #0a0a2a; font-family: 'Segoe UI', sans-serif; overflow: hidden;
-    }
-    .card {
-      background: rgba(255, 255, 255, 0.95); padding: 40px; border-radius: 20px;
-      text-align: center; box-shadow: 0 0 50px rgba(231, 76, 60, 0.5); border: 4px solid #c0392b;
-      width: 350px;
-    }
-    h1 { color: #c0392b; font-size: 24px; }
-    input[type="text"] {
-      padding: 12px; width: 80%; border: 2px solid #ddd; border-radius: 25px;
-      font-size: 16px; outline: none; margin-bottom: 20px; text-align: center;
-    }
-    .gender-select { margin-bottom: 20px; display: flex; justify-content: center; gap: 20px; }
-    .gender-option { cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: bold; color: #333; }
-    button {
-      padding: 15px 30px; border-radius: 30px; border: none;
-      background: #e74c3c; color: white; font-size: 16px; cursor: pointer;
-      transition: 0.3s; font-weight: bold; width: 100%;
-    }
-    button:hover { background: #c0392b; transform: scale(1.05); }
+    body { font-family: 'Playfair Display', serif; }
+    .tet-font { font-family: 'Dancing Script', cursive; }
   </style>
 </head>
-<body>
-<div class="card">
-  <h1>🎁 Quà tặng từ <br> Nopro Peach</h1>
-  <form action="/celebrate" method="post">
-    <input type="text" name="name" placeholder="Nhập tên bạn..." required>
+<body class="bg-red-900 min-h-screen flex items-center justify-center relative overflow-hidden">
 
-    <div class="gender-select">
-      <label class="gender-option"><input type="radio" name="gender" value="male" checked> Nam 🤵</label>
-      <label class="gender-option"><input type="radio" name="gender" value="female"> Nữ 💃</label>
+<div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-scales.png')] opacity-20"></div>
+
+<div class="z-10 bg-red-800/90 backdrop-blur-sm p-8 rounded-2xl shadow-[0_0_50px_rgba(251,191,36,0.3)] border-2 border-yellow-500 w-full max-w-md text-center mx-4">
+  <h1 class="text-4xl text-yellow-400 font-bold mb-2 tet-font">Xuân Bính Ngọ 2026</h1>
+  <p class="text-red-200 mb-8 text-sm uppercase tracking-widest">Lì xì lời chúc từ Nopro Peach</p>
+
+  <form action="/celebrate" method="post" class="space-y-6">
+    <div class="relative">
+      <input type="text" name="name" placeholder="Nhập tên của bạn..." required
+             class="w-full px-5 py-3 bg-red-950/50 border border-yellow-600/50 rounded-full text-yellow-100 placeholder-yellow-700 focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition-all text-center">
     </div>
 
-    <button type="submit">Nhận lời chúc ngay ✨</button>
+    <div class="flex justify-center gap-6">
+      <label class="cursor-pointer group">
+        <input type="radio" name="gender" value="male" checked class="hidden peer">
+        <div class="px-6 py-2 rounded-full border border-yellow-700 peer-checked:bg-yellow-500 peer-checked:text-red-900 peer-checked:font-bold text-yellow-600 transition-all hover:bg-yellow-900/30">
+          Nam 🤵
+        </div>
+      </label>
+      <label class="cursor-pointer group">
+        <input type="radio" name="gender" value="female" class="hidden peer">
+        <div class="px-6 py-2 rounded-full border border-yellow-700 peer-checked:bg-yellow-500 peer-checked:text-red-900 peer-checked:font-bold text-yellow-600 transition-all hover:bg-yellow-900/30">
+          Nữ 💃
+        </div>
+      </label>
+    </div>
+
+    <button type="submit"
+            class="w-full py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-red-900 font-bold rounded-full text-lg shadow-lg hover:from-yellow-400 hover:to-yellow-500 transform hover:scale-105 transition-all duration-300">
+      🧧 Nhận Lời Chúc Ngay
+    </button>
   </form>
+
+  <div class="mt-8 text-yellow-500/50 text-2xl animate-bounce">
+    🌸 🏮 🌸
+  </div>
 </div>
 </body>
 </html>

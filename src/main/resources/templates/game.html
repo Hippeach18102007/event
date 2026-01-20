@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gieo Quẻ - Hái Lộc Đầu Xuân</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Comfortaa:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Comfortaa', cursive; }
+        .hand-font { font-family: 'Dancing Script', cursive; }
+        .envelope { transition: all 0.3s; cursor: pointer; }
+        .envelope:hover { transform: translateY(-10px) rotate(5deg); }
+        .envelope.opened { opacity: 0; pointer-events: none; }
+
+        /* Hiệu ứng toả sáng cho số tiền */
+        .glow-text {
+            text-shadow: 0 0 10px #facc15, 0 0 20px #eab308;
+        }
+    </style>
+</head>
+<body class="bg-red-950 text-white min-h-screen py-10 px-4 relative">
+
+<div class="fixed inset-0 pointer-events-none opacity-20 bg-[url('https://www.transparenttextures.com/patterns/black-scales.png')]"></div>
+
+<div class="relative z-10 max-w-4xl mx-auto text-center">
+    <h1 class="hand-font text-5xl text-yellow-400 font-bold mb-2">Gieo Quẻ - Hái Lộc 2026</h1>
+    <p class="text-yellow-100 mb-8">Chọn một bao lì xì để thử vận may nào!</p>
+
+    <div th:if="${success == true}" class="mb-6 p-4 bg-green-600/80 rounded-xl border border-green-400 animate-bounce">
+        ✅ Đã gửi yêu cầu nhận Lì Xì! Chờ ting ting nhé!
+    </div>
+    <div th:if="${success == false}" class="mb-6 p-4 bg-red-600/80 rounded-xl border border-red-400">
+        ❌ Lỗi gửi mail rồi. Chụp màn hình gửi mess cho mình nha!
+    </div>
+
+    <div id="grid-lixi" class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+    </div>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-red-900 border-4 border-yellow-500 rounded-2xl p-6 max-w-md w-full relative shadow-[0_0_50px_rgba(234,179,8,0.5)]">
+            <button onclick="closeModal()" class="absolute top-2 right-4 text-3xl text-yellow-500 hover:text-white">&times;</button>
+
+            <div class="text-center mb-6">
+                <h3 class="text-yellow-200 text-lg uppercase mb-2">🎉 Chúc mừng bạn nhận được</h3>
+
+                <div id="money-display" class="hand-font text-6xl text-yellow-400 font-bold glow-text mb-4 animate-pulse">
+                    ...
+                </div>
+
+                <p id="que-text" class="text-white text-sm italic font-light border-y border-yellow-500/30 py-3 px-2 bg-black/20 rounded">
+                    Loading...
+                </p>
+            </div>
+
+            <form action="/submit-lixi" method="post" class="space-y-3 text-left">
+                <input type="hidden" name="luckyNote" id="luckyNoteInput">
+                <input type="hidden" name="luckyMoney" id="luckyMoneyInput">
+
+                <div>
+                    <label class="text-yellow-200 text-xs uppercase font-bold">Tên của bạn</label>
+                    <input type="text" name="fullName" required placeholder="Nhập tên..."
+                           class="w-full bg-red-950 border border-yellow-600 rounded px-3 py-2 focus:outline-none focus:border-yellow-400">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-yellow-200 text-xs uppercase font-bold">Ngân hàng</label>
+                        <input type="text" name="bankName" required placeholder="VD: MB"
+                               class="w-full bg-red-950 border border-yellow-600 rounded px-3 py-2 focus:outline-none focus:border-yellow-400">
+                    </div>
+                    <div>
+                        <label class="text-yellow-200 text-xs uppercase font-bold">Số tài khoản</label>
+                        <input type="text" name="bankNumber" required placeholder="Số TK..."
+                               class="w-full bg-red-950 border border-yellow-600 rounded px-3 py-2 focus:outline-none focus:border-yellow-400">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-yellow-200 text-xs uppercase font-bold">Facebook/Insta</label>
+                    <input type="text" name="socialLink" required placeholder="Link profile..."
+                           class="w-full bg-red-950 border border-yellow-600 rounded px-3 py-2 focus:outline-none focus:border-yellow-400">
+                </div>
+
+                <button type="submit" onclick="this.innerHTML='Đang gửi...'; this.classList.add('opacity-50')"
+                        class="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-red-900 font-bold py-3 rounded-xl hover:scale-105 transition-transform shadow-lg mt-2">
+                    🧧 Gửi yêu cầu nhận tiền
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Cấu hình tỉ lệ trúng thưởng (Tổng weight không cần bằng 100, nhưng để 100 cho dễ tính %)
+    const prizeList = [
+        { value: "500.000đ", weight: 1 },  // 1% (Siêu Khó)
+        { value: "200.000đ", weight: 4 },  // 4% (Khó)
+        { value: "100.000đ", weight: 10 }, // 10% (Khá Khó)
+        { value: "50.000đ",  weight: 15 }, // 15% (Trung bình)
+        { value: "30.000đ",  weight: 20 }, // 20% (Dễ)
+        { value: "20.000đ",  weight: 25 }, // 25% (Rất dễ)
+        { value: "10.000đ",  weight: 25 }  // 25% (Rất dễ)
+    ];
+
+    const fortunes = [
+        "Tiền vào cửa trước, vàng vào cửa sau, hai cái gặp nhau chui vào két sắt.",
+        "Năm nay tình duyên phơi phới, cẩn thận kẻo người yêu cũ mời cưới.",
+        "Sự nghiệp thăng tiến vùn vụt như ngựa Bính Ngọ phi nước đại.",
+        "Ăn được ngủ được là tiên, năm nay chắc chắn có nhiều tiền tiêu.",
+        "Ra đường gặp quý nhân, về nhà gặp thần tài.",
+        "Số đỏ như son, làm gì cũng thắng, chơi gì cũng hay.",
+        "Cẩn thận cân nặng, năm nay lộc ăn hơi nhiều đấy!"
+    ];
+
+    // Hàm chọn quà theo tỉ lệ (Weighted Random)
+    function getLuckyMoney() {
+        let totalWeight = 0;
+        prizeList.forEach(item => totalWeight += item.weight);
+
+        let randomNum = Math.random() * totalWeight;
+        let weightSum = 0;
+
+        for (let item of prizeList) {
+            weightSum += item.weight;
+            if (randomNum <= weightSum) {
+                return item.value;
+            }
+        }
+        return "10.000đ"; // Fallback nếu lỗi
+    }
+
+    // Tạo lưới bao lì xì
+    const grid = document.getElementById('grid-lixi');
+    for (let i = 0; i < 8; i++) {
+        const div = document.createElement('div');
+        div.className = 'envelope bg-red-600 border-2 border-yellow-400 h-32 md:h-40 rounded-xl flex items-center justify-center shadow-lg relative overflow-hidden group';
+        div.onclick = function() { openLixi(this) }; // Sửa lại cách gọi hàm để tránh lỗi context
+        div.innerHTML = `
+                <div class="text-5xl md:text-6xl group-hover:scale-110 transition-transform">🧧</div>
+                <div class="absolute bottom-2 text-yellow-200 text-xs font-bold">Bốc Đi</div>
+            `;
+        grid.appendChild(div);
+    }
+
+    // Xử lý khi mở lì xì
+    function openLixi(element) {
+        if (element.classList.contains('opened')) return; // Đã mở rồi thì thôi
+
+        // 1. Random kết quả
+        const money = getLuckyMoney();
+        const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+
+        // 2. Điền dữ liệu vào Modal
+        document.getElementById('money-display').innerText = money;
+        document.getElementById('que-text').innerText = fortune;
+
+        // 3. Điền vào input ẩn để gửi về server
+        document.getElementById('luckyMoneyInput').value = money;
+        document.getElementById('luckyNoteInput').value = fortune;
+
+        // 4. Hiệu ứng UI
+        element.classList.add('opened');
+
+        // Hiện Modal sau 300ms
+        setTimeout(() => {
+            document.getElementById('result-modal').classList.remove('hidden');
+        }, 300);
+    }
+
+    function closeModal() {
+        // Đóng modal nhưng không cho mở lại lì xì cũ (đã disable ở class 'opened')
+        document.getElementById('result-modal').classList.add('hidden');
+    }
+</script>
+</body>
+</html>
