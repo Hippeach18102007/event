@@ -10,8 +10,11 @@
         body { font-family: 'Comfortaa', cursive; }
         .hand-font { font-family: 'Dancing Script', cursive; }
         .envelope { transition: all 0.3s; cursor: pointer; }
-        .envelope:hover { transform: translateY(-10px) rotate(5deg); }
+        /* Chỉ hover khi chưa bị disabled */
+        .envelope:not(.disabled):hover { transform: translateY(-10px) rotate(5deg); }
+
         .envelope.opened { opacity: 0; pointer-events: none; }
+        .envelope.disabled { opacity: 0.5; pointer-events: none; filter: grayscale(80%); }
 
         /* Hiệu ứng toả sáng cho số tiền */
         .glow-text {
@@ -25,7 +28,7 @@
 
 <div class="relative z-10 max-w-4xl mx-auto text-center">
     <h1 class="hand-font text-5xl text-yellow-400 font-bold mb-2">Gieo Quẻ - Hái Lộc 2026</h1>
-    <p class="text-yellow-100 mb-8">Chọn một bao lì xì để thử vận may nào!</p>
+    <p class="text-yellow-100 mb-8">Chọn một bao lì xì để thử vận may nào! (Chỉ được chọn 1 cái thôi nhé)</p>
 
     <div th:if="${success == true}" class="mb-6 p-4 bg-green-600/80 rounded-xl border border-green-400 animate-bounce">
         ✅ Đã gửi yêu cầu nhận Lì Xì! Chờ ting ting nhé!
@@ -92,15 +95,15 @@
 </div>
 
 <script>
-    // 1. Cấu hình tỉ lệ trúng thưởng (Tổng weight không cần bằng 100, nhưng để 100 cho dễ tính %)
+    // 1. Cấu hình tỉ lệ trúng thưởng
     const prizeList = [
-        { value: "500.000đ", weight: 1 },  // 1% (Siêu Khó)
-        { value: "200.000đ", weight: 4 },  // 4% (Khó)
-        { value: "100.000đ", weight: 10 }, // 10% (Khá Khó)
-        { value: "50.000đ",  weight: 15 }, // 15% (Trung bình)
-        { value: "30.000đ",  weight: 20 }, // 20% (Dễ)
-        { value: "20.000đ",  weight: 25 }, // 25% (Rất dễ)
-        { value: "10.000đ",  weight: 25 }  // 25% (Rất dễ)
+        { value: "500.000đ", weight: 1 },  // 1%
+        { value: "200.000đ", weight: 4 },  // 4%
+        { value: "100.000đ", weight: 10 }, // 10%
+        { value: "50.000đ",  weight: 15 }, // 15%
+        { value: "30.000đ",  weight: 20 }, // 20%
+        { value: "20.000đ",  weight: 25 }, // 25%
+        { value: "10.000đ",  weight: 25 }  // 25%
     ];
 
     const fortunes = [
@@ -113,7 +116,10 @@
         "Cẩn thận cân nặng, năm nay lộc ăn hơi nhiều đấy!"
     ];
 
-    // Hàm chọn quà theo tỉ lệ (Weighted Random)
+    // BIẾN QUAN TRỌNG: Kiểm tra xem đã chơi chưa
+    let hasPlayed = false;
+
+    // Hàm chọn quà theo tỉ lệ
     function getLuckyMoney() {
         let totalWeight = 0;
         prizeList.forEach(item => totalWeight += item.weight);
@@ -127,15 +133,18 @@
                 return item.value;
             }
         }
-        return "10.000đ"; // Fallback nếu lỗi
+        return "10.000đ";
     }
 
     // Tạo lưới bao lì xì
     const grid = document.getElementById('grid-lixi');
     for (let i = 0; i < 8; i++) {
         const div = document.createElement('div');
-        div.className = 'envelope bg-red-600 border-2 border-yellow-400 h-32 md:h-40 rounded-xl flex items-center justify-center shadow-lg relative overflow-hidden group';
-        div.onclick = function() { openLixi(this) }; // Sửa lại cách gọi hàm để tránh lỗi context
+        div.className = 'envelope bg-red-600 border-2 border-yellow-400 h-32 md:h-40 rounded-xl flex items-center justify-center shadow-lg relative overflow-hidden group select-none';
+
+        // Gắn sự kiện click
+        div.onclick = function() { openLixi(this) };
+
         div.innerHTML = `
                 <div class="text-5xl md:text-6xl group-hover:scale-110 transition-transform">🧧</div>
                 <div class="absolute bottom-2 text-yellow-200 text-xs font-bold">Bốc Đi</div>
@@ -145,31 +154,43 @@
 
     // Xử lý khi mở lì xì
     function openLixi(element) {
-        if (element.classList.contains('opened')) return; // Đã mở rồi thì thôi
+        // 1. CHẶN LUÔN NẾU ĐÃ CHƠI
+        if (hasPlayed) return;
 
-        // 1. Random kết quả
+        // Đánh dấu đã chơi
+        hasPlayed = true;
+
+        // 2. KHÓA TẤT CẢ CÁC BAO LÌ XÌ KHÁC
+        const allEnvelopes = document.querySelectorAll('.envelope');
+        allEnvelopes.forEach(env => {
+            // Thêm class disabled (làm mờ, xám màu, không click được)
+            env.classList.add('disabled');
+        });
+
+        // Riêng cái vừa bấm thì cho hiệu ứng mở (biến mất)
+        element.classList.remove('disabled');
+        element.classList.add('opened');
+
+        // 3. Random kết quả
         const money = getLuckyMoney();
         const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
 
-        // 2. Điền dữ liệu vào Modal
+        // 4. Điền dữ liệu vào Modal
         document.getElementById('money-display').innerText = money;
         document.getElementById('que-text').innerText = fortune;
 
-        // 3. Điền vào input ẩn để gửi về server
+        // 5. Điền vào input ẩn để gửi về server
         document.getElementById('luckyMoneyInput').value = money;
         document.getElementById('luckyNoteInput').value = fortune;
 
-        // 4. Hiệu ứng UI
-        element.classList.add('opened');
-
-        // Hiện Modal sau 300ms
+        // 6. Hiện Modal sau 300ms
         setTimeout(() => {
             document.getElementById('result-modal').classList.remove('hidden');
         }, 300);
     }
 
     function closeModal() {
-        // Đóng modal nhưng không cho mở lại lì xì cũ (đã disable ở class 'opened')
+        // Chỉ đóng modal, người dùng vẫn không thể click lại vào bao lì xì
         document.getElementById('result-modal').classList.add('hidden');
     }
 </script>
