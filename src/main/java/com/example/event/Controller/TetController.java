@@ -17,6 +17,7 @@ public class TetController {
     public String index() {
         return "index"; // Trang nhập thông tin
     }
+ 
 
     // --- THÊM ĐOẠN NÀY ĐỂ FIX LỖI 405 ---
     // Nếu ai đó truy cập /celebrate mà không qua form (GET request),
